@@ -22,52 +22,47 @@ async function run() {
         const database = client.db("HitTheTrail");
         const eventTable = database.collection("Event");
         const scheduleTable = database.collection("Schedule");
+        const storyBlogTable = database.collection("StoryBlog");
 
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~EVENT~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        // --------------// GET Event // ------------------------------
+        //  ------------GET ------------------------------
         app.get('/events', async (req, res) => {
             const cursor = eventTable.find({});
             const events = await cursor.toArray();
-            console.log(events);
-            console.log("Hitting the get API");
             res.send({ events });
         })
-                    // Get Schedule 
+        // Get Schedule 
         app.get('/schedules', async (req, res) => {
             const cursor = scheduleTable.find({});
             const schedules = await cursor.toArray();
-            console.log(schedules);
-            console.log("Hitting the get API Schedules");
             res.send({ schedules });
         })
-
-        // --------------// POST an Event // ------------------------------
-                    // Event post
+        // Get StoryBlogs 
+        app.get('/storyblogs', async (req, res) => {
+            const cursor = storyBlogTable.find({});
+            const storyBlog = await cursor.toArray();
+            res.send({ storyBlog });
+        })
+     
+        // --------------// POST  // ------------------------------
+        // Event post
         app.post('/events/create', async (req, res) => {
             const event = req.body;
-            console.log(event);
-            console.log("Hitting post API");
             const result = await eventTable.insertOne(event);
             res.json(result)
         })
-                    // Schedule post
+        // Schedule post
         app.post('/schedules/create', async (req, res) => {
             const schedule = req.body;
-            console.log(schedule);
-            console.log("Hitting post API");
-            const result = await eventTable.insertOne(schedule);
+            const result = await scheduleTable.insertOne(schedule);
             res.json(result)
         })
 
-
-        // --------------// UPDATE an Event // ------------------------------
-                        // Event update
+        // --------------// UPDATE // ------------------------------
+        // Event update
         app.get('/events/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await eventTable.findOne(query);
-            console.log("find" + id)
-            console.log(result)
             res.send(result)
         })
         app.put('/events/:id', async (req, res) => {
@@ -90,17 +85,14 @@ async function run() {
                 }
             };
             const result = await eventTable.updateOne(filter, updateDoc, options);
-            console.log("Updated")
             res.send(result)
         })
 
-                // Schedule update
+        // Schedule update
         app.get('/schedules/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await scheduleTable.findOne(query);
-            console.log("find" + id)
-            console.log(result)
             res.send(result)
         })
         app.put('/schedules/:id', async (req, res) => {
@@ -110,31 +102,36 @@ async function run() {
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
-                    eventName: updateSchedule.eventName,
-                    image: updateSchedule.image,
-                    from: updateSchedule.from,
-                    destination: updateSchedule.destination,
-                    cost: updateSchedule.cost,
-                    start_date: updateSchedule.start_date,
-                    start_time: updateSchedule.start_time,
-                    end_date: updateSchedule.end_date,
-                    description: updateSchedule.description,
-                    extra: updateSchedule.extra,
+                    userName: updateSchedule.userName,
+                    userEmail: updateSchedule.userEmail,
+                    userPhone: updateSchedule.userPhone,
+                    userAddress: updateSchedule.userAddress,
                 }
             };
             const result = await scheduleTable.updateOne(filter, updateDoc, options);
-            console.log("Updated")
+            res.send(result)
+        })
+
+        app.put('/schedules/status/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateSchedule = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                   userStatus : (updateSchedule.userStatus === "pending") ? "ok" : "pending"
+                }
+            };
+            const result = await scheduleTable.updateOne(filter, updateDoc, options);
             res.send(result)
         })
 
 
-        // --------------// DELETE an Event // ------------------------------
+        // --------------// DELETE // ------------------------------
         app.delete('/events/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await eventTable.deleteOne(query);
-            console.log("deleted" + id)
-            console.log(result)
             res.json(result)
         })
 
@@ -142,12 +139,11 @@ async function run() {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await scheduleTable.deleteOne(query);
-            console.log("deleted" + id)
-            console.log(result)
             res.json(result)
         })
 
-    } finally {
+    }
+    finally {
         // await client.close();
     }
 }
